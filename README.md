@@ -12,6 +12,8 @@ A small local accounts-payable review tool:
 
 It uses the Python 3.12 standard library only. The app and tests need no API key, because by default the app replays a saved real Gemini run.
 
+**Presentation:** [WALKTHROUGH.md](WALKTHROUGH.md) is a short written walkthrough of the approach and findings.
+
 ## Results
 
 These are from the saved real `gemini-3.5-flash-lite` run, replayed offline. They are checked by `python -m unittest`.
@@ -132,6 +134,10 @@ Both changes are covered by tests. The note check compares whole tokens, so `PO-
 3. **Conflicts.** A PO for a different SKU, a missing receipt, or several receipts for the same PO each leave the invoice unresolved.
 4. **Undercharges.** An undercharge is `discrepant` but is never added to the recoverable total.
 5. **Failed extractions.** A `failed` extraction can't be corrected field by field. That would need manual entry or a new extraction, which is out of scope.
+
+## Time spent
+
+About 1 hour of my own time, spent choosing the task, reviewing the output and the real run, and directing the corrections. Claude Code agents did the build, tests and documentation. See `ai-workflow/`.
 
 ## Limitations
 
