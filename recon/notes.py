@@ -22,7 +22,7 @@ Facts:
 # the invoice, given even when no match was made (e.g. duplicates).
 REQUIRED_ID_KEYS = ("invoice_number", "invoice_po_reference", "po_id", "receipt_id")
 ID_PATTERN = re.compile(r"\b(?:INV|PO|RC)-\d+\b")
-AMOUNT_PATTERN = re.compile(r"\b\d{3,}\b")  # cents values; short numbers are left alone
+NUMBER_PATTERN = re.compile(r"\$?\d[\d,]*(?:\.\d+)?")  # 10000, 10,000, $120.00
 
 
 def draft_note(file_id, fields, result, provider):
@@ -45,15 +45,35 @@ def draft_note(file_id, fields, result, provider):
 
 
 def check_model_note(text, facts):
-    """Return why a model-written note cannot be used, or None if it is fine."""
+    """Return why a model-written note cannot be used, or None if it is fine.
+
+    IDs and amounts are compared as whole tokens, so PO-12 does not count as
+    citing PO-1, and 100 is not accepted just because 10000 is in the facts.
+    """
     for key in REQUIRED_ID_KEYS:
-        if facts.get(key) and facts[key] not in text:
+        if facts.get(key) and not _mentions(text, facts[key]):
             return f"does not cite {facts[key]} ({key})"
+
     facts_text = json.dumps(facts)
-    for found in ID_PATTERN.findall(text) + AMOUNT_PATTERN.findall(text):
-        if found not in facts_text:
-            return f"mentions {found}, which is not in the verified facts"
+    fact_ids = set(ID_PATTERN.findall(facts_text))
+    for note_id in ID_PATTERN.findall(text):
+        if note_id not in fact_ids:
+            return f"mentions {note_id}, which is not in the verified facts"
+
+    fact_numbers = set(re.findall(r"\d+", facts_text))
+    for number in NUMBER_PATTERN.findall(text):
+        if number.startswith("$") or "." in number:
+            return f"writes {number} as dollars, but the facts are in cents"
+        digits = number.replace(",", "")
+        # Short numbers (quantities, "4 sentences") are not checked.
+        if len(digits) >= 3 and digits not in fact_numbers:
+            return f"mentions {number}, which is not in the verified facts"
     return None
+
+
+def _mentions(text, token):
+    """True if `token` appears in `text` as a whole token (not inside PO-12 or XINV-1)."""
+    return re.search(rf"(?<![\w-]){re.escape(token)}(?![\w-])", text) is not None
 
 
 def _facts(file_id, fields, result):

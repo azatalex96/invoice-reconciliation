@@ -5,7 +5,7 @@ import unittest
 from recon.extraction import ExtractionError, coerce_correction, parse_response, usd_to_cents
 from recon.records import load_reference_data
 from recon.workflow import process_batch
-from tests.helpers import IMAGES_DIR, SEED_FILE
+from tests.helpers import DATA, IMAGES_DIR, SEED_FILE
 
 GOOD = {"invoice_number": "INV-2", "supplier_id": "S1", "po_id": "PO-2", "sku": "CAB-1",
         "quantity": 5, "unit_price": "24.00", "total": "120.00"}
@@ -16,6 +16,13 @@ class ParseResponseTest(unittest.TestCase):
         parsed = parse_response(json.dumps(GOOD))
         self.assertEqual(parsed["unit_cents"], 2400)
         self.assertEqual(parsed["total_cents"], 12000)
+
+    def test_real_schema_reply_for_blurred_image_is_rejected(self):
+        # Saved from one live gemini-3.5-flash-lite call with EXTRACTION_SCHEMA.
+        saved = json.loads((DATA / "model_responses" / "schema-check" / "unreadable.json").read_text())
+        self.assertEqual(saved["source"], "live")
+        with self.assertRaisesRegex(ExtractionError, "unreadable"):
+            parse_response(saved["raw_text"])
 
     def test_readable_true_is_accepted(self):
         self.assertEqual(parse_response(json.dumps({**GOOD, "readable": True}))["quantity"], 5)

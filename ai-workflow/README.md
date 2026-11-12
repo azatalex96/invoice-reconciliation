@@ -54,7 +54,11 @@ No user-level configuration was copied, so nothing needed redacting.
   2. **Prompt conflict.** The extraction prompt asked for a plain sentence when the image was unreadable, but JSON mode was forced, so Gemini returned all-null JSON instead. There is now an explicit `readable` field, and Gemini enforces a `responseSchema`.
   3. **Default data.** The app now replays the real Gemini run by default. The simulated set is kept for tests and the correction demo.
 
-  These changes are tested offline only. They were not rerun against the live API. A GitHub Actions workflow now runs the test suite on every push.
+  A GitHub Actions workflow now runs the test suite on every push.
+- **Second review pass (coordinating session, 2026-11-13).**
+  - **Fragment matching.** The first note check matched fragments of text, so `PO-12` counted as citing `PO-1` and `100` passed because `10000` was in the facts. It now compares whole tokens and rejects amounts written in dollars. Tests were added for each case.
+  - **Live schema check.** The new extraction schema had never been sent to Gemini, so a rejection (HTTP 400) would have broken every live extraction without any test noticing. One live call with the blurred image confirmed that Gemini accepts the schema: it returned `"readable": false`. The reply is saved in `data/model_responses/schema-check/` and tested.
+  - **Not rerun live:** the note-grounding change.
 - I decided to use simulated responses after the advisor review. They are labelled as simulated everywhere, so they can't be mistaken for real calls.
 
 ## Reproduce or replay

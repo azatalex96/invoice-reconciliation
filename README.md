@@ -30,7 +30,7 @@ Batch summary for the real run: 2 reconciled, 2 discrepant, 1 duplicate, 2 unres
 ## Run it
 
 ```
-python -m unittest -v                 # 42 tests, no network
+python -m unittest -v                 # 47 tests, no network
 python -m recon process               # replay the real Gemini run, save var/state.json, print the table
 python -m recon serve                 # review queue on http://127.0.0.1:8000/
 python -m recon report                # print saved results, including corrections made in the UI
@@ -110,7 +110,9 @@ What went wrong, and what changed as a result:
 2. **A misleading note.** Gemini's note for `duplicate` said "no purchase order or receipt IDs are present", but the invoice prints PO-1. The cause was that the PO printed on an invoice wasn't passed to the model when no match was made. The facts now include it (`invoice_po_reference`), and `check_model_note` rejects a note that doesn't cite it. `tests/test_notes.py` runs the real notes from that run through the check: the duplicate note is rejected, and the correct ones are kept.
 3. **Prompt and JSON mode disagreed.** The prompt asked for a plain sentence when the image was unreadable, but JSON mode forced an object. The prompt now uses an explicit `readable` field, enforced by the schema.
 
-Changes 2 and 3 are covered by tests. They have not been rerun against the live API.
+Both changes are covered by tests. The note check compares whole tokens, so `PO-12` doesn't count as citing `PO-1`, `100` isn't accepted because `10000` appears in the facts, and amounts written in dollars are rejected.
+
+**The schema was checked live.** It was sent to Gemini once, on 12 Nov 2026 (UTC), with the blurred image. Gemini accepted it and returned `"readable": false`, which the app rejects as "the model reported the image as unreadable". The reply is saved in `data/model_responses/schema-check/` and covered by a test. The note change has not been rerun live.
 
 ## Data
 

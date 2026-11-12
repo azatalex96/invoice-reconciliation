@@ -1,7 +1,7 @@
 """Model-written notes are checked before use; the cases come from the real Gemini run."""
 import unittest
 
-from recon.notes import draft_note
+from recon.notes import check_model_note, draft_note
 from tests.helpers import DATA, load_json
 
 LIVE_RUN = load_json(DATA / "real-run" / "live-run-state.json")
@@ -56,6 +56,25 @@ class ModelNoteCheckTest(unittest.TestCase):
         note = note_for("short-receipt", None)
         self.assertEqual(note["source"], "template")
         self.assertNotIn("rejected_model_note", note)
+
+
+class WholeTokenTest(unittest.TestCase):
+    """IDs and amounts must match exactly, not as fragments of longer ones."""
+
+    FACTS = {"invoice_number": "INV-1", "po_id": "PO-1", "expected_cents": 10000}
+
+    def test_longer_id_does_not_count_as_citing(self):
+        self.assertIsNotNone(check_model_note("INV-1 was checked against PO-12.", self.FACTS))
+
+    def test_fragment_of_an_amount_is_rejected(self):
+        self.assertIsNotNone(check_model_note("INV-1 on PO-1 differs by 100 cents.", self.FACTS))
+
+    def test_dollar_amount_is_rejected(self):
+        reason = check_model_note("INV-1 on PO-1 should be $100.00.", self.FACTS)
+        self.assertIn("dollars", reason)
+
+    def test_exact_amount_with_thousands_separator_is_accepted(self):
+        self.assertIsNone(check_model_note("INV-1 on PO-1: expected 10,000 cents.", self.FACTS))
 
 
 if __name__ == "__main__":
