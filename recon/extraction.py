@@ -29,6 +29,9 @@ EDITABLE_FIELDS = {
 def parse_response(raw_text):
     """Validate a raw model response and return normalised fields."""
     data = _load_json_object(raw_text)
+    # Older saved responses have no "readable" key; only an explicit false counts.
+    if data.get("readable") is False:
+        raise ExtractionError("the model reported the image as unreadable")
 
     fields = {}
     for name in TEXT_FIELDS:

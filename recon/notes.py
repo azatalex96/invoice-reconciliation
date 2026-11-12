@@ -2,18 +2,27 @@
 
 Notes are always drafts. They are built only from findings that code has
 already checked. With a live model the provider rewrites the same facts as a
-short note; otherwise a plain template is used. The note records its source.
+short note, and check_model_note() rejects a note that leaves out a cited ID or
+mentions an ID or amount that is not in the facts. A rejected note (or no
+model) falls back to a plain template. The note records its source.
 """
 import json
+import re
 from collections import Counter
 
 NOTE_PROMPT = """Write a short, neutral draft note (at most 4 sentences) for an accounts-payable reviewer.
 Use only the verified facts below. Cite the invoice number, purchase order and receipt IDs given.
-Do not add amounts or claims that are not in the facts, and do not suggest wrongdoing.
-Amounts are in USD cents.
+Do not add amounts or claims that are not in the facts, do not say that information is missing
+unless the facts say so, and do not suggest wrongdoing. Amounts are in USD cents.
 
 Facts:
 {facts}"""
+
+# Facts whose IDs a note must cite. invoice_po_reference is the PO printed on
+# the invoice, given even when no match was made (e.g. duplicates).
+REQUIRED_ID_KEYS = ("invoice_number", "invoice_po_reference", "po_id", "receipt_id")
+ID_PATTERN = re.compile(r"\b(?:INV|PO|RC)-\d+\b")
+AMOUNT_PATTERN = re.compile(r"\b\d{3,}\b")  # cents values; short numbers are left alone
 
 
 def draft_note(file_id, fields, result, provider):
@@ -25,9 +34,26 @@ def draft_note(file_id, fields, result, provider):
     except Exception as error:  # a note failure must not stop the batch
         text = None
         facts["note_error"] = str(error)
+
+    note = {"source": "template", "text": _template_note(facts)}
     if text:
-        return {"source": "model", "text": text}
-    return {"source": "template", "text": _template_note(facts)}
+        problem = check_model_note(text, facts)
+        if problem is None:
+            return {"source": "model", "text": text}
+        note["rejected_model_note"] = {"text": text, "reason": problem}
+    return note
+
+
+def check_model_note(text, facts):
+    """Return why a model-written note cannot be used, or None if it is fine."""
+    for key in REQUIRED_ID_KEYS:
+        if facts.get(key) and facts[key] not in text:
+            return f"does not cite {facts[key]} ({key})"
+    facts_text = json.dumps(facts)
+    for found in ID_PATTERN.findall(text) + AMOUNT_PATTERN.findall(text):
+        if found not in facts_text:
+            return f"mentions {found}, which is not in the verified facts"
+    return None
 
 
 def _facts(file_id, fields, result):
@@ -35,6 +61,8 @@ def _facts(file_id, fields, result):
     if fields:
         facts["invoice_number"] = fields["invoice_number"]
         facts["supplier_id"] = fields["supplier_id"]
+        if fields["po_id"]:
+            facts["invoice_po_reference"] = fields["po_id"]
     for key in ("po_id", "receipt_id", "expected_cents", "billed_cents", "difference_cents", "duplicate_of"):
         if result.get(key) is not None:
             facts[key] = result[key]

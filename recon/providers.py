@@ -25,14 +25,31 @@ from pathlib import Path
 
 EXTRACTION_PROMPT = """You are reading one supplier invoice image.
 Return only a JSON object with exactly these keys:
-  invoice_number, supplier_id, po_id, sku, quantity, unit_price, total
+  readable, invoice_number, supplier_id, po_id, sku, quantity, unit_price, total
 Rules:
+- readable is false if the image is too unclear to read reliably; then set every other field to null.
 - Copy text values exactly as printed.
 - po_id is the purchase order reference. Use null if it is absent or shown as "(missing)".
 - quantity is a whole number.
 - unit_price and total are strings copied exactly as printed in USD, e.g. "24.00".
-- Do not calculate, correct or guess any value. If a field cannot be read, use null.
-If the image cannot be read at all, reply with one sentence saying so instead of JSON."""
+- Do not calculate, correct or guess any value. If a field cannot be read, use null."""
+
+# Gemini enforces this shape, so key names and types cannot drift between replies.
+EXTRACTION_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "readable": {"type": "BOOLEAN"},
+        "invoice_number": {"type": "STRING", "nullable": True},
+        "supplier_id": {"type": "STRING", "nullable": True},
+        "po_id": {"type": "STRING", "nullable": True},
+        "sku": {"type": "STRING", "nullable": True},
+        "quantity": {"type": "INTEGER", "nullable": True},
+        "unit_price": {"type": "STRING", "nullable": True},
+        "total": {"type": "STRING", "nullable": True},
+    },
+    "required": ["readable", "invoice_number", "supplier_id", "po_id", "sku",
+                 "quantity", "unit_price", "total"],
+}
 
 
 class SavedResponseProvider:
@@ -79,7 +96,8 @@ class GeminiProvider:
                 {"inline_data": {"mime_type": "image/png", "data": image_data}},
                 {"text": EXTRACTION_PROMPT},
             ]}],
-            "generationConfig": {"responseMimeType": "application/json"},
+            "generationConfig": {"responseMimeType": "application/json",
+                                 "responseSchema": EXTRACTION_SCHEMA},
         }
         reply = self._post(body)
         response = {

@@ -17,6 +17,9 @@ class ParseResponseTest(unittest.TestCase):
         self.assertEqual(parsed["unit_cents"], 2400)
         self.assertEqual(parsed["total_cents"], 12000)
 
+    def test_readable_true_is_accepted(self):
+        self.assertEqual(parse_response(json.dumps({**GOOD, "readable": True}))["quantity"], 5)
+
     def test_fenced_json_and_missing_po(self):
         raw = "```json\n" + json.dumps({**GOOD, "po_id": "(missing)"}) + "\n```"
         self.assertIsNone(parse_response(raw)["po_id"])
@@ -29,6 +32,7 @@ class ParseResponseTest(unittest.TestCase):
             json.dumps({**GOOD, "quantity": "five"}),
             json.dumps({**GOOD, "total": "120.005"}),  # never rounded
             json.dumps({**GOOD, "unit_price": "-1.00"}),
+            json.dumps({**GOOD, "readable": False}),  # model says it cannot read the image
         ]
         for raw in bad_responses:
             with self.subTest(raw=raw):

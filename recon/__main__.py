@@ -5,6 +5,9 @@
   python -m recon serve [--port 8000]
 
 The provider defaults to env MODEL_PROVIDER, else "saved" (offline replay).
+"saved" replays the real Gemini run by default; pass
+--responses data/model_responses/simulated for the simulated set, which
+includes a deliberate misread for the correction demo.
 """
 import argparse
 import os
@@ -20,8 +23,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 REFERENCE_FILES = [DATA / "seed" / "seed.json", DATA / "additions.json"]
 IMAGES_DIR = DATA / "images"
-SIMULATED_RESPONSES = DATA / "model_responses" / "simulated"
 RESPONSES_DIR = DATA / "model_responses"  # live runs save to live-<provider>/
+REAL_RESPONSES = RESPONSES_DIR / "live-gemini"
 STATE_FILE = ROOT / "var" / "state.json"
 
 
@@ -30,7 +33,7 @@ def main():
     parser.add_argument("command", choices=["process", "report", "serve"])
     parser.add_argument("--provider", default=os.environ.get("MODEL_PROVIDER", "saved"),
                         choices=["saved", "gemini", "claude"])
-    parser.add_argument("--responses", default=str(SIMULATED_RESPONSES),
+    parser.add_argument("--responses", default=str(REAL_RESPONSES),
                         help="folder of saved responses to replay (provider 'saved')")
     parser.add_argument("--state", default=str(STATE_FILE))
     parser.add_argument("--port", type=int, default=8000)

@@ -49,13 +49,19 @@ No user-level configuration was copied, so nothing needed redacting.
 - My first sed edit to `data/additions.json` put unescaped quotes inside a JSON string. The JSON check caught it and I fixed it before re-running the tests.
 - The second advisor review found three problems. `max_tokens=2000` could truncate live output, because thinking is always on for this model, so I raised it to 16000 and label truncation as `failed`. The batch insight said "most frequent" when no finding recurred, so I fixed the wording. And the UI JavaScript had never been executed, so I ran it under Node with a stubbed DOM for all 8 invoices, including one with a correction (the throwaway script is not part of the submission).
 - **Gemini follow-up.** The coordinator's instruction (excerpt): "add a Gemini provider and save one real model run… standard library `urllib` only… Wait at least 30 seconds between live requests. On HTTP 429, back off… NEVER write [the key] to any file." I debugged everything against a fake `urlopen` first and made no live calls until the tests passed. In the single live run, 2 of the 8 extractions failed with HTTP **503** (model overloaded). That was not a status I retried. The batch continued and showed them as `failed`, which is the intended behaviour, but I then added 503 to the retried statuses, with a test, and re-requested only those two images (2 requests) instead of rerunning the batch. I checked the outcome by comparing every real extracted field with the ground-truth records (no mismatches) and by replaying the saved responses against the hand-written expectations (`tests/test_real_responses.py`).
+- **Review pass (coordinating session, 2026-11-12).** After reading the real Gemini output, the coordinating Claude Code session found three issues and fixed them in one commit:
+  1. **Grounding.** The model's note for `duplicate` said no PO IDs were present, although the invoice prints PO-1. The cause: the printed PO was not in the facts sent to the model. The facts now include it (`invoice_po_reference`). `notes.check_model_note` rejects a note that omits a given ID, or that mentions an ID or amount not in the facts, and falls back to the template with the reason saved. `tests/test_notes.py` runs the *real* notes through the check: the duplicate note is rejected and the grounded ones are kept.
+  2. **Prompt conflict.** The extraction prompt asked for a plain sentence when the image was unreadable, but JSON mode was forced, so Gemini returned all-null JSON instead. There is now an explicit `readable` field, and Gemini enforces a `responseSchema`.
+  3. **Default data.** The app now replays the real Gemini run by default. The simulated set is kept for tests and the correction demo.
+
+  These changes are tested offline only. They were not rerun against the live API. A GitHub Actions workflow now runs the test suite on every push.
 - I decided to use simulated responses after the advisor review. They are labelled as simulated everywhere, so they can't be mistaken for real calls.
 
 ## Reproduce or replay
 
 - Requirements: Python 3.12. Nothing else for the app or tests.
 - `python -m unittest -v`, then `python -m recon process` / `python -m recon serve`.
-- Replay without credentials: `python -m recon process --responses <folder>`. The default folder holds the simulated responses. The saved real Gemini run replays with `python -m recon process --responses data/model_responses/live-gemini --state data/real-run/replay-state.json`. Live runs (`MODEL_PROVIDER=gemini|claude` plus `MODEL_API_KEY`) save to `data/model_responses/live-<provider>/`.
+- Replay without credentials: `python -m recon process`. The default folder is the saved real Gemini run (`data/model_responses/live-gemini`). Pass `--responses data/model_responses/simulated` for the simulated set. Live runs (`MODEL_PROVIDER=gemini|claude` plus `MODEL_API_KEY`) save to `data/model_responses/live-<provider>/`.
 - No hooks exist, so there is nothing to enable.
 
 ## Decisions and limitations

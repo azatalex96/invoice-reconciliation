@@ -19,7 +19,7 @@
         "data/model_responses/live-gemini/",
         "data/real-run/"
       ],
-      "notes": "Gemini (used for real): REST generateContent via urllib, model gemini-3.5-flash-lite (MODEL_NAME overrides), responseMimeType application/json for extraction, other settings default, >=30 s between requests, 429/503 retried max 3 times. 16 live requests in one follow-up run; real responses in data/model_responses/live-gemini/, outputs in data/real-run/. Claude: Anthropic Messages API, claude-opus-5-5, max_tokens 16000 (thinking is always on and shares it), default thinking/effort, no temperature - never called for real. Default runs replay SIMULATED responses from data/model_responses/simulated/."
+      "notes": "Gemini (used for real): REST generateContent via urllib, model gemini-3.5-flash-lite (MODEL_NAME overrides), responseMimeType application/json for extraction, other settings default, >=30 s between requests, 429/503 retried max 3 times. 16 live requests in one follow-up run; real responses in data/model_responses/live-gemini/, outputs in data/real-run/. Claude: Anthropic Messages API, claude-opus-5-5, max_tokens 16000 (thinking is always on and shares it), default thinking/effort, no temperature - never called for real. Default runs replay the REAL Gemini responses (data/model_responses/live-gemini/); the SIMULATED set (data/model_responses/simulated/) drives most tests and the correction demo. Gemini extraction uses responseSchema (EXTRACTION_SCHEMA) with a readable flag; model-written notes are checked by notes.check_model_note before use."
     },
     "skills": {
       "status": "not-used",
@@ -143,6 +143,6 @@
       ]
     }
   ],
-  "replay_command": "python -m recon process --responses data/model_responses/live-gemini --state data/real-run/replay-state.json   (real run; use data/model_responses/simulated for the simulated set)",
+  "replay_command": "python -m recon process   (replays the real Gemini run; add --responses data/model_responses/simulated for the simulated set)",
   "workflow_example_path": "ai-workflow/README.md#one-workflow-example"
 }

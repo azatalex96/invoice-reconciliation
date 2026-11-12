@@ -99,8 +99,12 @@ class GeminiProviderTest(unittest.TestCase):
             self.assertIn("gemini-3.5-flash-lite:generateContent", request.full_url)
             self.assertNotIn("test-key", request.full_url)  # key goes in a header only
             self.assertEqual(request.get_header("X-goog-api-key"), "test-key")
-            parts = json.loads(request.data)["contents"][0]["parts"]
+            body = json.loads(request.data)
+            parts = body["contents"][0]["parts"]
             self.assertEqual(parts[0]["inline_data"]["mime_type"], "image/png")
+            schema = body["generationConfig"]["responseSchema"]
+            self.assertIn("readable", schema["required"])
+            self.assertEqual(schema["properties"]["quantity"]["type"], "INTEGER")
 
             self.assertEqual(response["source"], "live")
             self.assertEqual(response["model"], "gemini-3.5-flash-lite")
