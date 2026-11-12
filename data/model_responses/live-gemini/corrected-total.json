@@ -1,0 +1,9 @@
+{
+  "source": "live",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "received_at": "2026-11-12T18:27:24+00:00",
+  "file_id": "corrected-total",
+  "finish_reason": "STOP",
+  "raw_text": "{\n  \"invoice_number\": \"INV-5\",\n  \"supplier_id\": \"S2\",\n  \"po_id\": \"PO-4\",\n  \"sku\": \"HUB-2\",\n  \"quantity\": 2,\n  \"unit_price\": \"45.00\",\n  \"total\": \"90.00\"\n}"
+}

@@ -1,0 +1,9 @@
+{
+  "source": "live",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "received_at": "2026-11-12T18:32:47+00:00",
+  "file_id": "wrong-price",
+  "finish_reason": "STOP",
+  "raw_text": "{\n  \"invoice_number\": \"INV-2\",\n  \"supplier_id\": \"S1\",\n  \"po_id\": \"PO-2\",\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"24.00\",\n  \"total\": \"120.00\"\n}"
+}

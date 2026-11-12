@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice Review Queue</title>
+<style>
+  :root { --bg:#f7f7f5; --panel:#fff; --text:#1d1d1b; --muted:#6b6b66; --line:#dddcd6;
+          --ok:#1f7a3f; --warn:#a15c00; --bad:#b3261e; --info:#2f5f9e; }
+  body { margin:0; font:14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
+  h1 { font-size:18px; margin:0 0 8px; }
+  h2 { font-size:15px; margin:18px 0 6px; }
+  .cards { display:flex; gap:8px; flex-wrap:wrap; }
+  .card { border:1px solid var(--line); border-radius:6px; padding:6px 10px; background:var(--bg); cursor:pointer; }
+  .card.active { outline:2px solid var(--info); }
+  .card b { font-size:16px; margin-right:4px; }
+  .muted { color:var(--muted); }
+  main { display:grid; grid-template-columns:minmax(300px, 420px) 1fr; gap:16px; padding:16px 20px; }
+  table { border-collapse:collapse; width:100%; background:var(--panel); }
+  th, td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.row { cursor:pointer; } tr.row:hover, tr.row.selected { background:#eef3fa; }
+  .status { font-weight:600; }
+  .reconciled { color:var(--ok); } .discrepant { color:var(--warn); }
+  .duplicate, .unresolved { color:var(--info); } .failed { color:var(--bad); }
+  .detail { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:14px; }
+  .side { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  img.invoice { width:100%; border:1px solid var(--line); }
+  .changed { background:#fff3cd; }
+  pre { white-space:pre-wrap; background:var(--bg); padding:8px; border-radius:4px; font-size:12px; }
+  form { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:6px 0; }
+  input, select, button, textarea { font:inherit; }
+  .error { color:var(--bad); }
+  @media (max-width: 900px) { main, .side { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Invoice review queue <span class="muted">(fictional data; all notes are drafts)</span></h1>
+  <div class="cards" id="cards"></div>
+  <p id="insight" class="muted"></p>
+</header>
+<main>
+  <section>
+    <table>
+      <thead><tr><th>Invoice</th><th>Status</th><th>Diff (cents)</th><th>Review</th></tr></thead>
+      <tbody id="queue"></tbody>
+    </table>
+  </section>
+  <section class="detail" id="detail"><p class="muted">Select an invoice.</p></section>
+</main>
+
+<script>
+const FIELDS = ["invoice_number", "supplier_id", "po_id", "sku", "quantity", "unit_cents", "total_cents"];
+let state = null;
+let filter = "all";
+let selected = null;
+
+async function load() {
+  state = await (await fetch("/api/state")).json();
+  render();
+}
+
+async function post(url, body) {
+  const response = await fetch(url, { method: "POST", body: JSON.stringify(body) });
+  const data = await response.json();
+  if (!response.ok) { document.getElementById("message").textContent = data.error; return; }
+  state = data;
+  render();
+}
+
+function render() {
+  renderCards();
+  renderQueue();
+  renderDetail();
+}
+
+function renderCards() {
+  const s = state.summary;
+  const total = state.order.length;
+  let html = card("all", total, "all");
+  for (const [status, count] of Object.entries(s.counts)) html += card(status, count, status);
+  html += `<div class="card"><b>${s.recoverable_cents}</b>cents recoverable (discrepant only)</div>`;
+  document.getElementById("cards").innerHTML = html;
+  document.getElementById("insight").textContent = state.insight;
+}
+
+function card(key, count, label) {
+  return `<div class="card ${filter === key ? "active" : ""}" onclick="setFilter('${key}')"><b>${count}</b>${label}</div>`;
+}
+
+function setFilter(key) { filter = key; render(); }
+
+function renderQueue() {
+  const rows = state.order
+    .map(id => state.invoices[id])
+    .filter(inv => filter === "all" || inv.result.status === filter)
+    .map(inv => `<tr class="row ${inv.file_id === selected ? "selected" : ""}" onclick="select('${inv.file_id}')">
+        <td>${inv.file_id}<br><span class="muted">${inv.fields ? inv.fields.invoice_number : "-"}</span></td>
+        <td class="status ${inv.result.status}">${inv.result.status}</td>
+        <td>${show(inv.result.difference_cents)}</td>
+        <td>${inv.review.status}</td></tr>`);
+  document.getElementById("queue").innerHTML = rows.join("");
+}
+
+function select(id) { selected = id; render(); }
+
+function show(value) { return value === null || value === undefined ? "-" : escapeHtml(String(value)); }
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function renderDetail() {
+  const el = document.getElementById("detail");
+  if (!selected) return;
+  const inv = state.invoices[selected];
+  const r = inv.result;
+  const ex = inv.extraction;
+  el.innerHTML = `
+    <h2>${inv.file_id} <span class="status ${r.status}">${r.status}</span></h2>
+    <div class="side">
+      <div><img class="invoice" src="/images/${inv.image}" alt="Original invoice ${inv.file_id}"></div>
+      <div>
+        <h2>Extracted fields</h2>
+        <p class="muted">Source: <b>${show(ex.source)}</b>${ex.source === "simulated" ? " (saved simulated response, not a live model call)" : ""}${ex.model ? " - " + ex.model : ""}</p>
+        ${ex.error ? `<p class="error">${escapeHtml(ex.error)}</p>` : fieldsTable(inv)}
+        ${ex.error ? "" : correctionForm()}
+        <p id="message" class="error"></p>
+      </div>
+    </div>
+    <h2>Matched records</h2>
+    ${matchedRecords(r)}
+    <h2>Expected vs billed (integer USD cents)</h2>
+    ${calculation(r)}
+    <h2>Findings</h2>
+    <ul>${r.findings.map(f => `<li>${escapeHtml(f)}</li>`).join("") || "<li>None</li>"}</ul>
+    <h2>Draft note <span class="muted">(${inv.note.source})</span></h2>
+    <pre>${escapeHtml(inv.note.text || "No note needed.")}</pre>
+    <h2>Review</h2>
+    <form onsubmit="saveReview(event)">
+      <select id="review-status">
+        <option value="open" ${inv.review.status === "open" ? "selected" : ""}>open</option>
+        <option value="reviewed" ${inv.review.status === "reviewed" ? "selected" : ""}>reviewed</option>
+      </select>
+      <input id="review-comment" size="40" placeholder="Reviewer comment" value="${escapeHtml(inv.review.comment || "")}">
+      <button>Save review</button>
+    </form>
+    <h2>Correction history</h2>
+    <ul>${inv.corrections.map(c => `<li>${c.at}: ${c.field} ${show(c.old)} &rarr; ${show(c.new)}</li>`).join("") || "<li>None</li>"}</ul>
+    <details><summary>Raw extraction response</summary><pre>${escapeHtml(ex.raw_text || "")}</pre></details>`;
+}
+
+function fieldsTable(inv) {
+  const original = inv.extraction.fields;
+  const rows = FIELDS.map(f => {
+    const changed = original[f] !== inv.fields[f];
+    return `<tr class="${changed ? "changed" : ""}"><th>${f}</th><td>${show(inv.fields[f])}</td>
+      <td class="muted">${changed ? "original: " + show(original[f]) : ""}</td></tr>`;
+  });
+  return `<table>${rows.join("")}</table>`;
+}
+
+function correctionForm() {
+  return `<form onsubmit="saveCorrection(event)">
+    <select id="correct-field">${FIELDS.map(f => `<option>${f}</option>`).join("")}</select>
+    <input id="correct-value" size="12" placeholder="new value">
+    <button>Correct and rerun</button></form>
+    <p class="muted">Amounts are entered in cents. Leave po_id empty for "no reference".</p>`;
+}
+
+function matchedRecords(r) {
+  if (!r.po_id) return `<p class="muted">No purchase order matched.</p>`;
+  const po = state.purchase_orders[r.po_id];
+  const receipt = state.receipts.find(x => x.receipt_id === r.receipt_id);
+  return `<table>
+    <tr><th>Purchase order</th><td>${po.po_id}: supplier ${po.supplier_id}, ${po.sku}, qty ${po.quantity} at ${po.unit_cents} cents</td></tr>
+    <tr><th>Receipt</th><td>${receipt ? `${receipt.receipt_id}: ${receipt.sku}, qty ${receipt.quantity} received` : "none"}</td></tr>
+  </table>`;
+}
+
+function calculation(r) {
+  if (r.expected_cents === null) return `<p class="muted">No expected amount: the invoice is ${r.status}.</p>`;
+  return `<table>
+    <tr><th>Expected</th><td>ordered ${r.ordered_quantity} x agreed ${r.agreed_unit_cents} = ${r.expected_cents}</td></tr>
+    <tr><th>Billed</th><td>invoice total ${r.billed_cents} (billed ${r.billed_quantity} x ${r.billed_unit_cents})</td></tr>
+    <tr><th>Difference</th><td>${r.billed_cents} - ${r.expected_cents} = <b>${r.difference_cents}</b></td></tr>
+    <tr><th>Quantities</th><td>billed ${r.billed_quantity}, ordered ${r.ordered_quantity}, received ${r.received_quantity}</td></tr>
+  </table>`;
+}
+
+function saveCorrection(event) {
+  event.preventDefault();
+  post(`/api/invoices/${selected}/correct`, {
+    field: document.getElementById("correct-field").value,
+    value: document.getElementById("correct-value").value,
+  });
+}
+
+function saveReview(event) {
+  event.preventDefault();
+  post(`/api/invoices/${selected}/review`, {
+    status: document.getElementById("review-status").value,
+    comment: document.getElementById("review-comment").value,
+  });
+}
+
+load();
+</script>
+</body>
+</html>

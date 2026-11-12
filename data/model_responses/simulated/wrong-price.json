@@ -1,0 +1,6 @@
+{
+  "source": "simulated",
+  "model": null,
+  "file_id": "wrong-price",
+  "raw_text": "{\"invoice_number\": \"INV-2\", \"supplier_id\": \"S1\", \"po_id\": \"PO-2\", \"sku\": \"CAB-1\", \"quantity\": 5, \"unit_price\": \"24.00\", \"total\": \"120.00\"}"
+}

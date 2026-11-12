@@ -1,0 +1,133 @@
+{
+  "_comment": "Hand-checked expected results for the full 8-invoice batch, written before running the app. Arithmetic is shown per case. Rule numbers refer to data/seed/domain.md.",
+  "reference_cases": [
+    {
+      "case": 1,
+      "file_id": "clean",
+      "check": "Clean invoice matches the intended PO and receipt; amounts agree.",
+      "rule": "2, 3",
+      "expected": {
+        "status": "reconciled",
+        "po_id": "PO-1",
+        "receipt_id": "RC-1",
+        "expected_cents": 10000,
+        "billed_cents": 10000,
+        "difference_cents": 0
+      },
+      "working": "PO-1: 5 x 2000 = 10000; billed total 100.00 USD = 10000; 10000 - 10000 = 0. Matched by S1 + PO-1, not by amount (PO-2 has the same amount)."
+    },
+    {
+      "case": 2,
+      "file_id": "wrong-price",
+      "check": "Incorrect unit price gives the expected discrepancy, linked to the invoice and the agreed price.",
+      "rule": "3, 4 (worked example)",
+      "expected": {
+        "status": "discrepant",
+        "po_id": "PO-2",
+        "receipt_id": "RC-2",
+        "expected_cents": 10000,
+        "billed_cents": 12000,
+        "difference_cents": 2000
+      },
+      "working": "PO-2: 5 x 2000 = 10000; billed 5 x 2400 = 12000; 12000 - 10000 = 2000 (overcharge)."
+    },
+    {
+      "case": 3,
+      "file_id": "duplicate",
+      "check": "Duplicate is flagged and excluded from payable/recoverable totals.",
+      "rule": "4",
+      "expected": {
+        "status": "duplicate",
+        "duplicate_of": "clean",
+        "count_as_payable": false
+      },
+      "working": "Same supplier S1 and invoice number INV-1 as 'clean', which is processed first."
+    },
+    {
+      "case": 4,
+      "file_id": "missing-reference",
+      "check": "Missing PO reference stays unresolved with no expected amount.",
+      "rule": "2",
+      "expected": {
+        "status": "unresolved",
+        "po_id": null,
+        "expected_cents": null,
+        "difference_cents": null
+      },
+      "working": "No PO on the invoice. Its amount (10000) equals both PO-1 and PO-2, so an amount match would be wrong."
+    },
+    {
+      "case": 5,
+      "file_id": "corrected-total",
+      "check": "Correcting an extracted field reruns reconciliation and the result persists after restart.",
+      "rule": "3, 4",
+      "expected_before_correction": {
+        "status": "discrepant",
+        "po_id": "PO-4",
+        "receipt_id": "RC-4",
+        "expected_cents": 9000,
+        "billed_cents": 9800,
+        "difference_cents": 800
+      },
+      "correction": {
+        "field": "total_cents",
+        "value": 9000,
+        "reason": "Image shows Total (USD): 90.00; the extraction read 98.00."
+      },
+      "expected_after_correction": {
+        "status": "reconciled",
+        "po_id": "PO-4",
+        "receipt_id": "RC-4",
+        "expected_cents": 9000,
+        "billed_cents": 9000,
+        "difference_cents": 0
+      },
+      "working": "PO-4: 2 x 4500 = 9000. Before: 9800 - 9000 = 800. After: 9000 - 9000 = 0."
+    }
+  ],
+  "other_cases": [
+    {
+      "file_id": "conflicting-reference",
+      "rule": "2",
+      "expected": {
+        "status": "unresolved",
+        "expected_cents": null,
+        "difference_cents": null
+      },
+      "working": "Invoice supplier S2 cites PO-1, which belongs to S1: conflicting reference. Amount equals PO-1 exactly, which must not be used to match."
+    },
+    {
+      "file_id": "short-receipt",
+      "rule": "3",
+      "expected": {
+        "status": "discrepant",
+        "po_id": "PO-3",
+        "receipt_id": "RC-3",
+        "expected_cents": 5000,
+        "billed_cents": 5000,
+        "difference_cents": 0
+      },
+      "working": "PO-3: 4 x 1250 = 5000; billed 5000; difference 0. Billed quantity 4 is more than received quantity 3, so it is flagged for review. No amount is claimed for the shortfall (domain.md does not define one; see README ambiguities)."
+    },
+    {
+      "file_id": "unreadable",
+      "rule": "n/a (processing failure)",
+      "expected": {
+        "status": "failed",
+        "expected_cents": null,
+        "difference_cents": null
+      },
+      "working": "The simulated response is not JSON, so validation rejects it; the batch continues."
+    }
+  ],
+  "expected_summary_before_correction": {
+    "counts": {"reconciled": 1, "discrepant": 3, "duplicate": 1, "unresolved": 2, "failed": 1},
+    "recoverable_cents": 2800,
+    "working": "Positive differences of discrepant invoices: 2000 (wrong-price) + 800 (corrected-total, before correction) + 0 (short-receipt)."
+  },
+  "expected_summary_after_correction": {
+    "counts": {"reconciled": 2, "discrepant": 2, "duplicate": 1, "unresolved": 2, "failed": 1},
+    "recoverable_cents": 2000,
+    "working": "Only wrong-price has a positive difference."
+  }
+}

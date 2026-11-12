@@ -1,0 +1,420 @@
+{
+  "order": [
+    "clean",
+    "wrong-price",
+    "duplicate",
+    "missing-reference",
+    "conflicting-reference",
+    "short-receipt",
+    "corrected-total",
+    "unreadable"
+  ],
+  "invoices": {
+    "clean": {
+      "file_id": "clean",
+      "image": "clean.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-1\",\n  \"supplier_id\": \"S1\",\n  \"po_id\": \"PO-1\",\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"20.00\",\n  \"total\": \"100.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-1",
+          "supplier_id": "S1",
+          "sku": "CAB-1",
+          "po_id": "PO-1",
+          "quantity": 5,
+          "unit_cents": 2000,
+          "total_cents": 10000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-1",
+        "supplier_id": "S1",
+        "sku": "CAB-1",
+        "po_id": "PO-1",
+        "quantity": 5,
+        "unit_cents": 2000,
+        "total_cents": 10000
+      },
+      "result": {
+        "status": "reconciled",
+        "findings": [],
+        "po_id": "PO-1",
+        "receipt_id": "RC-1",
+        "expected_cents": 10000,
+        "billed_cents": 10000,
+        "difference_cents": 0,
+        "count_as_payable": true,
+        "ordered_quantity": 5,
+        "received_quantity": 5,
+        "billed_quantity": 5,
+        "agreed_unit_cents": 2000,
+        "billed_unit_cents": 2000
+      },
+      "note": {
+        "source": "none",
+        "text": ""
+      }
+    },
+    "wrong-price": {
+      "file_id": "wrong-price",
+      "image": "wrong-price.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-2\",\n  \"supplier_id\": \"S1\",\n  \"po_id\": \"PO-2\",\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"24.00\",\n  \"total\": \"120.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-2",
+          "supplier_id": "S1",
+          "sku": "CAB-1",
+          "po_id": "PO-2",
+          "quantity": 5,
+          "unit_cents": 2400,
+          "total_cents": 12000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-2",
+        "supplier_id": "S1",
+        "sku": "CAB-1",
+        "po_id": "PO-2",
+        "quantity": 5,
+        "unit_cents": 2400,
+        "total_cents": 12000
+      },
+      "result": {
+        "status": "discrepant",
+        "findings": [
+          "Unit price: billed 2400 cents, agreed 2000 cents on PO-2.",
+          "Amount: billed 12000 cents, expected 10000 cents."
+        ],
+        "po_id": "PO-2",
+        "receipt_id": "RC-2",
+        "expected_cents": 10000,
+        "billed_cents": 12000,
+        "difference_cents": 2000,
+        "count_as_payable": true,
+        "ordered_quantity": 5,
+        "received_quantity": 5,
+        "billed_quantity": 5,
+        "agreed_unit_cents": 2000,
+        "billed_unit_cents": 2400
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - INV-2 (wrong-price) is discrepant. Unit price: billed 2400 cents, agreed 2000 cents on PO-2. Amount: billed 12000 cents, expected 10000 cents. Checked against PO-2 and RC-2; difference (billed minus expected) 2000 cents."
+      }
+    },
+    "duplicate": {
+      "file_id": "duplicate",
+      "image": "duplicate.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-1\",\n  \"supplier_id\": \"S1\",\n  \"po_id\": \"PO-1\",\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"20.00\",\n  \"total\": \"100.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-1",
+          "supplier_id": "S1",
+          "sku": "CAB-1",
+          "po_id": "PO-1",
+          "quantity": 5,
+          "unit_cents": 2000,
+          "total_cents": 10000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-1",
+        "supplier_id": "S1",
+        "sku": "CAB-1",
+        "po_id": "PO-1",
+        "quantity": 5,
+        "unit_cents": 2000,
+        "total_cents": 10000
+      },
+      "result": {
+        "status": "duplicate",
+        "findings": [
+          "Duplicate: same supplier (S1) and invoice number (INV-1) as clean."
+        ],
+        "po_id": null,
+        "receipt_id": null,
+        "expected_cents": null,
+        "billed_cents": null,
+        "difference_cents": null,
+        "count_as_payable": false,
+        "duplicate_of": "clean"
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - INV-1 (duplicate) is duplicate. Duplicate: same supplier (S1) and invoice number (INV-1) as clean. Not counted as a separate payable invoice."
+      }
+    },
+    "missing-reference": {
+      "file_id": "missing-reference",
+      "image": "missing-reference.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-3\",\n  \"supplier_id\": \"S1\",\n  \"po_id\": null,\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"20.00\",\n  \"total\": \"100.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-3",
+          "supplier_id": "S1",
+          "sku": "CAB-1",
+          "po_id": null,
+          "quantity": 5,
+          "unit_cents": 2000,
+          "total_cents": 10000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-3",
+        "supplier_id": "S1",
+        "sku": "CAB-1",
+        "po_id": null,
+        "quantity": 5,
+        "unit_cents": 2000,
+        "total_cents": 10000
+      },
+      "result": {
+        "status": "unresolved",
+        "findings": [
+          "Missing reference: the invoice has no purchase-order reference."
+        ],
+        "po_id": null,
+        "receipt_id": null,
+        "expected_cents": null,
+        "billed_cents": null,
+        "difference_cents": null,
+        "count_as_payable": false
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - INV-3 (missing-reference) is unresolved. Missing reference: the invoice has no purchase-order reference. No expected amount is given until the reference is confirmed."
+      }
+    },
+    "conflicting-reference": {
+      "file_id": "conflicting-reference",
+      "image": "conflicting-reference.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-6\",\n  \"supplier_id\": \"S2\",\n  \"po_id\": \"PO-1\",\n  \"sku\": \"CAB-1\",\n  \"quantity\": 5,\n  \"unit_price\": \"20.00\",\n  \"total\": \"100.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-6",
+          "supplier_id": "S2",
+          "sku": "CAB-1",
+          "po_id": "PO-1",
+          "quantity": 5,
+          "unit_cents": 2000,
+          "total_cents": 10000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-6",
+        "supplier_id": "S2",
+        "sku": "CAB-1",
+        "po_id": "PO-1",
+        "quantity": 5,
+        "unit_cents": 2000,
+        "total_cents": 10000
+      },
+      "result": {
+        "status": "unresolved",
+        "findings": [
+          "Conflicting reference: PO-1 belongs to supplier S1, but the invoice is from S2."
+        ],
+        "po_id": null,
+        "receipt_id": null,
+        "expected_cents": null,
+        "billed_cents": null,
+        "difference_cents": null,
+        "count_as_payable": false
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - INV-6 (conflicting-reference) is unresolved. Conflicting reference: PO-1 belongs to supplier S1, but the invoice is from S2. No expected amount is given until the reference is confirmed."
+      }
+    },
+    "short-receipt": {
+      "file_id": "short-receipt",
+      "image": "short-receipt.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-4\",\n  \"supplier_id\": \"S2\",\n  \"po_id\": \"PO-3\",\n  \"sku\": \"ADP-7\",\n  \"quantity\": 4,\n  \"unit_price\": \"12.50\",\n  \"total\": \"50.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-4",
+          "supplier_id": "S2",
+          "sku": "ADP-7",
+          "po_id": "PO-3",
+          "quantity": 4,
+          "unit_cents": 1250,
+          "total_cents": 5000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-4",
+        "supplier_id": "S2",
+        "sku": "ADP-7",
+        "po_id": "PO-3",
+        "quantity": 4,
+        "unit_cents": 1250,
+        "total_cents": 5000
+      },
+      "result": {
+        "status": "discrepant",
+        "findings": [
+          "Quantity: billed 4, received 3 on RC-3."
+        ],
+        "po_id": "PO-3",
+        "receipt_id": "RC-3",
+        "expected_cents": 5000,
+        "billed_cents": 5000,
+        "difference_cents": 0,
+        "count_as_payable": true,
+        "ordered_quantity": 4,
+        "received_quantity": 3,
+        "billed_quantity": 4,
+        "agreed_unit_cents": 1250,
+        "billed_unit_cents": 1250
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - INV-4 (short-receipt) is discrepant. Quantity: billed 4, received 3 on RC-3. Checked against PO-3 and RC-3; difference (billed minus expected) 0 cents."
+      }
+    },
+    "corrected-total": {
+      "file_id": "corrected-total",
+      "image": "corrected-total.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": \"INV-5\",\n  \"supplier_id\": \"S2\",\n  \"po_id\": \"PO-4\",\n  \"sku\": \"HUB-2\",\n  \"quantity\": 2,\n  \"unit_price\": \"45.00\",\n  \"total\": \"90.00\"\n}",
+        "fields": {
+          "invoice_number": "INV-5",
+          "supplier_id": "S2",
+          "sku": "HUB-2",
+          "po_id": "PO-4",
+          "quantity": 2,
+          "unit_cents": 4500,
+          "total_cents": 9000
+        },
+        "error": null
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": {
+        "invoice_number": "INV-5",
+        "supplier_id": "S2",
+        "sku": "HUB-2",
+        "po_id": "PO-4",
+        "quantity": 2,
+        "unit_cents": 4500,
+        "total_cents": 9000
+      },
+      "result": {
+        "status": "reconciled",
+        "findings": [],
+        "po_id": "PO-4",
+        "receipt_id": "RC-4",
+        "expected_cents": 9000,
+        "billed_cents": 9000,
+        "difference_cents": 0,
+        "count_as_payable": true,
+        "ordered_quantity": 2,
+        "received_quantity": 2,
+        "billed_quantity": 2,
+        "agreed_unit_cents": 4500,
+        "billed_unit_cents": 4500
+      },
+      "note": {
+        "source": "none",
+        "text": ""
+      }
+    },
+    "unreadable": {
+      "file_id": "unreadable",
+      "image": "unreadable.png",
+      "extraction": {
+        "source": "live",
+        "model": "gemini-3.5-flash-lite",
+        "raw_text": "{\n  \"invoice_number\": null,\n  \"supplier_id\": null,\n  \"po_id\": null,\n  \"sku\": null,\n  \"quantity\": null,\n  \"unit_price\": null,\n  \"total\": null\n}",
+        "fields": null,
+        "error": "invalid extraction: invoice_number is missing"
+      },
+      "corrections": [],
+      "review": {
+        "status": "open",
+        "comment": ""
+      },
+      "fields": null,
+      "result": {
+        "status": "failed",
+        "findings": [
+          "Extraction failed: invalid extraction: invoice_number is missing"
+        ],
+        "po_id": null,
+        "receipt_id": null,
+        "expected_cents": null,
+        "billed_cents": null,
+        "difference_cents": null,
+        "count_as_payable": false
+      },
+      "note": {
+        "source": "template",
+        "text": "DRAFT - unreadable (unreadable) is failed. Extraction failed: invalid extraction: invoice_number is missing"
+      }
+    }
+  },
+  "processed_at": "2026-11-12T18:33:22+00:00",
+  "summary": {
+    "counts": {
+      "reconciled": 2,
+      "discrepant": 2,
+      "duplicate": 1,
+      "unresolved": 2,
+      "failed": 1
+    },
+    "recoverable_cents": 2000
+  },
+  "insight": "No finding type recurs in this batch; each appears once: Unit price, Amount, Duplicate, Missing reference, Conflicting reference, Quantity, Extraction failed. These are review prompts, not proof of error or wrongdoing."
+}

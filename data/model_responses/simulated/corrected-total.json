@@ -1,0 +1,6 @@
+{
+  "source": "simulated",
+  "model": null,
+  "file_id": "corrected-total",
+  "raw_text": "{\"invoice_number\": \"INV-5\", \"supplier_id\": \"S2\", \"po_id\": \"PO-4\", \"sku\": \"HUB-2\", \"quantity\": 2, \"unit_price\": \"45.00\", \"total\": \"98.00\"}"
+}

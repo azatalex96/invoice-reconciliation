@@ -1,0 +1,6 @@
+{
+  "source": "simulated",
+  "model": null,
+  "file_id": "short-receipt",
+  "raw_text": "{\"invoice_number\": \"INV-4\", \"supplier_id\": \"S2\", \"po_id\": \"PO-3\", \"sku\": \"ADP-7\", \"quantity\": 4, \"unit_price\": \"12.50\", \"total\": \"50.00\"}"
+}

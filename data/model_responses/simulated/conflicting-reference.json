@@ -1,0 +1,6 @@
+{
+  "source": "simulated",
+  "model": null,
+  "file_id": "conflicting-reference",
+  "raw_text": "{\"invoice_number\": \"INV-6\", \"supplier_id\": \"S2\", \"po_id\": \"PO-1\", \"sku\": \"CAB-1\", \"quantity\": 5, \"unit_price\": \"20.00\", \"total\": \"100.00\"}"
+}

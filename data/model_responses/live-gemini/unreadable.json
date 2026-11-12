@@ -1,0 +1,9 @@
+{
+  "source": "live",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "received_at": "2026-11-12T18:27:58+00:00",
+  "file_id": "unreadable",
+  "finish_reason": "STOP",
+  "raw_text": "{\n  \"invoice_number\": null,\n  \"supplier_id\": null,\n  \"po_id\": null,\n  \"sku\": null,\n  \"quantity\": null,\n  \"unit_price\": null,\n  \"total\": null\n}"
+}

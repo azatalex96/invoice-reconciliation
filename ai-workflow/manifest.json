@@ -1,0 +1,148 @@
+{
+  "template": false,
+  "categories": {
+    "development_tools_and_models": {
+      "status": "used",
+      "files": [],
+      "notes": "Claude Code 2.1.319 (inferred from bundled-skills path) as a subagent of a parent session (subagent type not-exportable), Windows 11, model claude-opus-5-5, default settings. All code, fixtures, tests and docs were agent-generated. Python 3.12.4, Pillow 12.0.0, Node 24.14.1 (syntax check only)."
+    },
+    "plugins_and_extensions": {
+      "status": "default",
+      "files": [],
+      "notes": "Built-in Claude Code skill 'claude-api' loaded once to confirm model ID and image request shape. Built-in advisor review used twice (before coding, before handback). Skill-recommended refusal fallbacks parameter not enabled; refusals/truncation become failed extractions. No plugins installed for this exercise."
+    },
+    "application_models_and_parameters": {
+      "status": "used",
+      "files": [
+        "recon/providers.py",
+        "recon/notes.py",
+        "data/model_responses/live-gemini/",
+        "data/real-run/"
+      ],
+      "notes": "Gemini (used for real): REST generateContent via urllib, model gemini-3.5-flash-lite (MODEL_NAME overrides), responseMimeType application/json for extraction, other settings default, >=30 s between requests, 429/503 retried max 3 times. 16 live requests in one follow-up run; real responses in data/model_responses/live-gemini/, outputs in data/real-run/. Claude: Anthropic Messages API, claude-opus-5-5, max_tokens 16000 (thinking is always on and shares it), default thinking/effort, no temperature - never called for real. Default runs replay SIMULATED responses from data/model_responses/simulated/."
+    },
+    "skills": {
+      "status": "not-used",
+      "files": [],
+      "notes": "No custom skills. The starter pack's generate-assignment-data SKILL.md was read and followed manually for fixtures, not installed."
+    },
+    "agent_instructions_and_subagents": {
+      "status": "used",
+      "files": [
+        "ai-workflow/prompts/01-build-task.md",
+        "ai-workflow/prompts/02-gemini-real-run.md"
+      ],
+      "notes": "A coordinating Claude Code session delegated the work to a built-in general-purpose subagent (no custom agent definition, no CLAUDE.md). The full instructions it received are saved in ai-workflow/prompts/; the API key is redacted there."
+    },
+    "hooks_and_scripts": {
+      "status": "not-used",
+      "files": [],
+      "notes": "No hooks."
+    },
+    "prompts_and_rules": {
+      "status": "used",
+      "files": [
+        "recon/providers.py",
+        "recon/notes.py"
+      ],
+      "notes": "EXTRACTION_PROMPT and NOTE_PROMPT live in code. The domain rules are data/seed/domain.md (copied unchanged)."
+    },
+    "tool_and_mcp_settings": {
+      "status": "default",
+      "files": [],
+      "notes": "Claude Code default tools; no MCP server used for this exercise."
+    },
+    "permissions_and_environment_names": {
+      "status": "used",
+      "files": [
+        "ai-workflow/.env.example"
+      ],
+      "notes": "Env names: MODEL_API_KEY, MODEL_PROVIDER, MODEL_NAME. The Gemini key was supplied by the coordinating session and passed only as a command environment variable; it is not in any file (grep for its prefix: 0 hits). Session permissions came from the parent Claude Code session (user-level, not copied: not-exportable)."
+    }
+  },
+  "configuration_records": [
+    {
+      "name": "Subagent instructions",
+      "category": "agent_instructions_and_subagents",
+      "purpose": "The exact build and Gemini follow-up instructions the coordinating session gave the subagent",
+      "original_path_or_scope": "coordinating Claude Code session (messages to a built-in general-purpose subagent)",
+      "saved_path": "ai-workflow/prompts/",
+      "version_or_commit": "2026-11-10 (build), 2026-11-12 (Gemini follow-up)",
+      "used_during": "whole exercise",
+      "status": "used",
+      "redactions": [
+        "Gemini API key and its prefix replaced with <REDACTED>"
+      ]
+    },
+    {
+      "name": "Claude Code (subagent session)",
+      "category": "development_tools_and_models",
+      "purpose": "Read the brief, generate fixtures, write app, tests and docs, run them",
+      "original_path_or_scope": "user-level Claude Code installation",
+      "saved_path": "not-exportable",
+      "version_or_commit": "Claude Code 2.1.319 (inferred); model claude-opus-5-5",
+      "used_during": "whole exercise",
+      "status": "default",
+      "redactions": []
+    },
+    {
+      "name": "claude-api built-in skill",
+      "category": "plugins_and_extensions",
+      "purpose": "Confirm model ID and Messages API image request shape",
+      "original_path_or_scope": "bundled with Claude Code",
+      "saved_path": "not-exportable (bundled)",
+      "version_or_commit": "bundled with Claude Code 2.1.319",
+      "used_during": "before writing recon/providers.py",
+      "status": "used",
+      "redactions": []
+    },
+    {
+      "name": "Extraction prompt",
+      "category": "prompts_and_rules",
+      "purpose": "Ask a document-capable model for invoice fields as printed, JSON only",
+      "original_path_or_scope": "recon/providers.py",
+      "saved_path": "recon/providers.py",
+      "version_or_commit": "this submission",
+      "used_during": "application; sent to gemini-3.5-flash-lite in the real run (Claude path never executed)",
+      "status": "used",
+      "redactions": []
+    },
+    {
+      "name": "Note-drafting prompt",
+      "category": "prompts_and_rules",
+      "purpose": "Rewrite verified findings as a short neutral draft note",
+      "original_path_or_scope": "recon/notes.py",
+      "saved_path": "recon/notes.py",
+      "version_or_commit": "this submission",
+      "used_during": "application; sent to gemini-3.5-flash-lite in the real run (Claude path never executed)",
+      "status": "used",
+      "redactions": []
+    },
+    {
+      "name": "Simulated extraction responses",
+      "category": "application_models_and_parameters",
+      "purpose": "Offline, labelled stand-ins for model output so the app and tests run without a key",
+      "original_path_or_scope": "data/make_simulated_responses.py",
+      "saved_path": "data/model_responses/simulated/",
+      "version_or_commit": "this submission",
+      "used_during": "default runs and tests",
+      "status": "used",
+      "redactions": []
+    },
+    {
+      "name": "Gemini real run",
+      "category": "application_models_and_parameters",
+      "purpose": "One live extraction + note run over the 8 invoice images, saved for key-free replay",
+      "original_path_or_scope": "recon/providers.py (GeminiProvider)",
+      "saved_path": "data/model_responses/live-gemini/, data/real-run/",
+      "version_or_commit": "gemini-3.5-flash-lite, 2026-11-12",
+      "used_during": "Gemini follow-up step",
+      "status": "used",
+      "redactions": [
+        "API key never written; supplied via env MODEL_API_KEY only"
+      ]
+    }
+  ],
+  "replay_command": "python -m recon process --responses data/model_responses/live-gemini --state data/real-run/replay-state.json   (real run; use data/model_responses/simulated for the simulated set)",
+  "workflow_example_path": "ai-workflow/README.md#one-workflow-example"
+}

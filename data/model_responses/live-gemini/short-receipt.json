@@ -1,0 +1,9 @@
+{
+  "source": "live",
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "received_at": "2026-11-12T18:26:54+00:00",
+  "file_id": "short-receipt",
+  "finish_reason": "STOP",
+  "raw_text": "{\n  \"invoice_number\": \"INV-4\",\n  \"supplier_id\": \"S2\",\n  \"po_id\": \"PO-3\",\n  \"sku\": \"ADP-7\",\n  \"quantity\": 4,\n  \"unit_price\": \"12.50\",\n  \"total\": \"50.00\"\n}"
+}

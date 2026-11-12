@@ -1,0 +1,4 @@
+# Runtime: none (Python 3.12 standard library only; the Gemini provider uses urllib).
+# Optional:
+#   anthropic>=0.40   live extraction with --provider claude (tested offline only, with a fake client; 0.112.0 installed here)
+#   Pillow>=10        only to re-render data/images via data/render_additions.py (12.0.0 used)

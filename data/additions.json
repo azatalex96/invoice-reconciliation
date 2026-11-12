@@ -1,0 +1,79 @@
+{
+  "_comment": "Hand-written fictional additions (generation method: README.md, Data section). Same shape as seed/seed.json. Invoice records here are the ground truth used to render images and to check results; the app reads the images through an extraction provider, not these records.",
+  "purchase_orders": [
+    {
+      "po_id": "PO-3",
+      "supplier_id": "S2",
+      "sku": "ADP-7",
+      "quantity": 4,
+      "unit_cents": 1250
+    },
+    {
+      "po_id": "PO-4",
+      "supplier_id": "S2",
+      "sku": "HUB-2",
+      "quantity": 2,
+      "unit_cents": 4500
+    }
+  ],
+  "receipts": [
+    {
+      "receipt_id": "RC-3",
+      "po_id": "PO-3",
+      "sku": "ADP-7",
+      "quantity": 3
+    },
+    {
+      "receipt_id": "RC-4",
+      "po_id": "PO-4",
+      "sku": "HUB-2",
+      "quantity": 2
+    }
+  ],
+  "invoices": [
+    {
+      "file_id": "conflicting-reference",
+      "invoice_number": "INV-6",
+      "supplier_id": "S2",
+      "po_id": "PO-1",
+      "sku": "CAB-1",
+      "quantity": 5,
+      "unit_cents": 2000,
+      "total_cents": 10000,
+      "layout": "b"
+    },
+    {
+      "file_id": "short-receipt",
+      "invoice_number": "INV-4",
+      "supplier_id": "S2",
+      "po_id": "PO-3",
+      "sku": "ADP-7",
+      "quantity": 4,
+      "unit_cents": 1250,
+      "total_cents": 5000,
+      "layout": "a"
+    },
+    {
+      "file_id": "corrected-total",
+      "invoice_number": "INV-5",
+      "supplier_id": "S2",
+      "po_id": "PO-4",
+      "sku": "HUB-2",
+      "quantity": 2,
+      "unit_cents": 4500,
+      "total_cents": 9000,
+      "layout": "a"
+    },
+    {
+      "file_id": "unreadable",
+      "invoice_number": "INV-7",
+      "supplier_id": "S2",
+      "po_id": "PO-4",
+      "sku": "HUB-2",
+      "quantity": 2,
+      "unit_cents": 4500,
+      "total_cents": 9000,
+      "layout": "b"
+    }
+  ]
+}
